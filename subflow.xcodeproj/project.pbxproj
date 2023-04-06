@@ -291,12 +291,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7KRTHZ2J43;
 				INFOPLIST_FILE = subflowTV.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = subflow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.61;
+				MARKETING_VERSION = 2.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.subflow.subflow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -306,7 +308,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 15.0;
+				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};
 			name = Debug;
 		};
@@ -321,12 +323,14 @@
 				DEVELOPMENT_TEAM = 7KRTHZ2J43;
 				GCC_OPTIMIZATION_LEVEL = fast;
 				INFOPLIST_FILE = subflowTV.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = subflow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.61;
+				MARKETING_VERSION = 2.0;
 				MTL_FAST_MATH = YES;
 				"OTHER_SWIFT_FLAGS[arch=*]" = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.subflow.subflow;
@@ -336,7 +340,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "subflow/SubFlow-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 15.0;
+				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};
 			name = Release;
 		};
@@ -470,12 +474,14 @@
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 7KRTHZ2J43;
 				INFOPLIST_FILE = "$(SRCROOT)/SubFlow/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = subflow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.61;
+				MARKETING_VERSION = 2.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.subflow.subflow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -505,12 +511,14 @@
 				DEVELOPMENT_TEAM = 7KRTHZ2J43;
 				GCC_OPTIMIZATION_LEVEL = fast;
 				INFOPLIST_FILE = "$(SRCROOT)/SubFlow/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = subflow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.61;
+				MARKETING_VERSION = 2.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.subflow.subflow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
