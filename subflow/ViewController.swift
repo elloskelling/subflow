@@ -85,7 +85,21 @@ class OS2LTCPMessageHandler: ChannelInboundHandler {
 //      print("Received TCP message: \(message)")
       if let dataFrame = parseDataFrame(json: message) {
         if dataFrame.evt.elementsEqual("beat"){
-          vc.pauseDelays(localScale:Float(dataFrame.strength))
+          // if sequence loaded, just read the BPM, but don't pulse on this beat event
+          if (vc.objectToDraw.cmdParser.cmdLoaded){
+            if dataFrame.bpm >= CFTimeInterval(CMD_BPM_MIN) && dataFrame.bpm <= CFTimeInterval(CMD_BPM_MAX) {
+              vc.objectToDraw.remoteBPM = dataFrame.bpm
+              vc.objectToDraw.pulsePeriod = 60.0/vc.objectToDraw.remoteBPM
+              vc.objectToDraw.speed_in = Float(TRI_SPACE/vc.objectToDraw.pulsePeriod)
+            }else{
+              vc.objectToDraw.pulsePeriod = 0.0
+            }
+ //           print("BPM only: \(vc.objectToDraw.remoteBPM)")
+          }else{
+            // no sequence loaded. Just pulse on this beat event.
+//            print("Direct Beat")
+            vc.pauseDelays(localScale:Float(dataFrame.strength))
+          }
         }
         if dataFrame.evt.elementsEqual("cmd"){
           if (dataFrame.id == 23){
