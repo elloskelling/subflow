@@ -107,6 +107,7 @@ class commandParser {
     }
         
     if (curIdx < cmdSize - 1) {
+//      print("advancing index \(curIdx) -> \(curIdx+1)")
       curIdx += 1
     }
   

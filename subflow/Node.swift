@@ -224,7 +224,7 @@ class Node {
         remoteBPM = cmdBPM
         pulsePeriod = 60.0/remoteBPM
         speed_in = Float(TRI_SPACE/pulsePeriod)
-//        print("BPM: ", remoteBPM)
+ //       print("BPM: ", remoteBPM)
       }else{
         pulsePeriod = 0.0
       }
@@ -234,7 +234,7 @@ class Node {
       let cmdSpd = Float(inCmd.cmdArg)
       if cmdSpd >= SPEED_MIN && cmdSpd <= SPEED_MAX {
         speed_in = cmdSpd
-//        print("Speed: ", speed_in)
+ //       print("Speed: ", speed_in)
       }
       curCmdCountdown = inCmd.cmdDuration
     case UDP_SCALE:
@@ -243,7 +243,7 @@ class Node {
         pulse_scale = cmdScl
 //        print("Scale: ", pulse_scale)
       }
-      curCmdCountdown = curCmd.cmdDuration
+      curCmdCountdown = inCmd.cmdDuration
     case UDP_MODE:
       let cmdMode = UInt32(inCmd.cmdArg)
       if (cmdMode >= FIRST_MODE && cmdMode <= LAST_MODE){
@@ -345,8 +345,11 @@ class Node {
     positionY = Y_OFFSET_LOW*offcenter+drift*0.1*sinf( positionZ * 2.0 * .pi / SECS_PER_MOVE)
 
     if pulsePeriod > 1e-1 {
-      if (Date().timeIntervalSinceReferenceDate > lastPulseTimeStamp + pulsePeriod) {
-        lastPulseTimeStamp += pulsePeriod
+      // might have been a while since we've pulsed. Catch up on the number of periods we may have missed and then go from there
+      let __now = Date().timeIntervalSinceReferenceDate
+      let numperiodsElapsed = ((__now - lastPulseTimeStamp) / pulsePeriod).rounded(.towardZero)
+      if (numperiodsElapsed > 0 &&  __now > lastPulseTimeStamp + numperiodsElapsed*pulsePeriod) {
+        lastPulseTimeStamp += numperiodsElapsed*pulsePeriod
         scale = pulse_scale
         if cmdParser.cmdReady{
           iterateCmds()
@@ -364,7 +367,6 @@ class Node {
   
   func iterateCmds(){
     var safeCounter: Int = 0
-//    print("Countdown: ", curCmdCountdown)
     if curCmdCountdown > 0{
       curCmdCountdown -= 1
     }else{

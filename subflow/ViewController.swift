@@ -82,42 +82,68 @@ class OS2LTCPMessageHandler: ChannelInboundHandler {
   func channelRead(context: ChannelHandlerContext, data: NIOAny) {
     var buffer = unwrapInboundIn(data)
     if let message = buffer.readString(length: buffer.readableBytes) {
-//      print("Received TCP message: \(message)")
+      //      print("Received TCP message: \(message)")
       if let dataFrame = parseDataFrame(json: message) {
         if dataFrame.evt.elementsEqual("beat"){
-          // if sequence loaded, just read the BPM, but don't pulse on this beat event
-          if (vc.objectToDraw.cmdParser.cmdLoaded){
-            if dataFrame.bpm >= CFTimeInterval(CMD_BPM_MIN) && dataFrame.bpm <= CFTimeInterval(CMD_BPM_MAX) {
+          if (vc.directBeat == false){
+            if (
+              //abs(dataFrame.bpm - vc.objectToDraw.remoteBPM) > 1e-3 &&
+              dataFrame.bpm >= CFTimeInterval(CMD_BPM_MIN) &&
+              dataFrame.bpm <= CFTimeInterval(CMD_BPM_MAX)) {
+              // just read the BPM, but don't pulse on this beat event
               vc.objectToDraw.remoteBPM = dataFrame.bpm
               vc.objectToDraw.pulsePeriod = 60.0/vc.objectToDraw.remoteBPM
               vc.objectToDraw.speed_in = Float(TRI_SPACE/vc.objectToDraw.pulsePeriod)
-            }else{
-              vc.objectToDraw.pulsePeriod = 0.0
+//              print("BPM only: \(vc.objectToDraw.remoteBPM)")
             }
- //           print("BPM only: \(vc.objectToDraw.remoteBPM)")
           }else{
-            // no sequence loaded. Just pulse on this beat event.
+            // Just pulse on this beat event.
 //            print("Direct Beat")
-            vc.pauseDelays(localScale:Float(dataFrame.strength))
+            if vc.objectToDraw.cmdParser.cmdReady{
+              vc.objectToDraw.iterateCmds()
+            }
+            vc.pulseDown(localScale:Float(dataFrame.strength))
           }
         }
         if dataFrame.evt.elementsEqual("cmd"){
           if (dataFrame.id == 23){
             if (dataFrame.param >= FIRST_MODE && dataFrame.param <= LAST_MODE){
               vc.objectToDraw.playMode = dataFrame.param
-//              print("changed mode")
+              //              print("changed mode")
+            }
+          }
+          if (dataFrame.id == 17){
+            if (dataFrame.param == 100){
+              // start sequence
+              vc.seqUp()
+            }else{
+              // stop sequence
+              vc.objectToDraw.cmdParser.cmdReady = false
+            }
+            if (dataFrame.param == 0){
+              vc.seqTrash()
+            }
+          }
+          if (dataFrame.id == 11){
+            vc.objectToDraw.pulse_scale = SCALE_MIN+(SCALE_MAX-SCALE_MIN)*Float(dataFrame.param)/100.0
+          }
+          if (dataFrame.id == 7){
+            if (dataFrame.param == 0){
+              vc.directBeat = false
+            } else {
+              vc.directBeat = true
             }
           }
         }
-//        print("Event: \(dataFrame.evt)")
-//        print("Change: \(dataFrame.change)")
-//        print("Position: \(dataFrame.pos)")
-//        print("BPM: \(dataFrame.bpm)")
-//        print("Strength: \(dataFrame.strength)")
-//        print("ID: \(dataFrame.id)")
-//        print("Param: \(dataFrame.param)")
+        //        print("Event: \(dataFrame.evt)")
+        //        print("Change: \(dataFrame.change)")
+        //        print("Position: \(dataFrame.pos)")
+        //        print("BPM: \(dataFrame.bpm)")
+        //        print("Strength: \(dataFrame.strength)")
+        //        print("ID: \(dataFrame.id)")
+        //        print("Param: \(dataFrame.param)")
       } else {
-          print("Failed to parse JSON string")
+        print("Failed to parse JSON string")
       }
     }
   }
@@ -170,6 +196,7 @@ class ViewController: UIViewController {
   var totalPulseCount: CFTimeInterval = 0.0
   var uuidSum: UInt8 = 0
   var oldPulsePeriod: CFTimeInterval = 0.0
+  var directBeat: Bool = true
   
   #if !os(tvOS)
   override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -228,7 +255,7 @@ class ViewController: UIViewController {
       if (locy < 0.6){ // upper
         computeDelays()
       }else{ //lower
-        pauseDelays(localScale: 1.0)
+        pauseDelays()
       }
     }
   }
@@ -245,7 +272,14 @@ class ViewController: UIViewController {
     }
   }
   
-  
+  func seqUp(){
+    if objectToDraw.cmdParser.cmdLoaded {
+      objectToDraw.reinitCmds()
+      objectToDraw.cmdParser.cmdReady = true
+      // get the initial set of commands until the first beat-dependent command
+      objectToDraw.iterateCmds()
+    }
+  }
     
   func computeDelays(){
     var pulseElapsed: CFTimeInterval = 0.0
@@ -253,13 +287,8 @@ class ViewController: UIViewController {
 
     pulseClickTimestamp = Date().timeIntervalSinceReferenceDate
 
-    if objectToDraw.cmdParser.cmdLoaded {
-      objectToDraw.reinitCmds()
-      objectToDraw.cmdParser.cmdReady = true
-      // get the initial set of commands until the first beat-dependent command
-      objectToDraw.iterateCmds()
-    }
-
+    seqUp()
+    
     if (oldPulsePeriod > 1e-1){
       objectToDraw.pulsePeriod = oldPulsePeriod
       objectToDraw.speed_in = Float(TRI_SPACE/objectToDraw.pulsePeriod)
@@ -300,17 +329,23 @@ class ViewController: UIViewController {
     objectToDraw.scale = objectToDraw.pulse_scale
   }
 
-  func pauseDelays(localScale: Float){
+  func seqTrash(){
+    objectToDraw.cmdParser.cmdLoaded = false
+    objectToDraw.reinitCmds()
+    objectToDraw.defaultParams()
+  }
+  
+  func seqDown(){
     if (objectToDraw.cmdParser.cmdReady){
       // first click -- stop executing, can restart again
       objectToDraw.cmdParser.cmdReady = false
     }else{
       // second click -- unload, cannot restart
-      objectToDraw.cmdParser.cmdLoaded = false
-      objectToDraw.reinitCmds()
-      objectToDraw.defaultParams()
+      seqTrash()
     }
+  }
 
+  func pulseDown(localScale: Float){
     if objectToDraw.pulsePeriod > 1e-1{
       oldPulsePeriod = objectToDraw.pulsePeriod
       objectToDraw.pulsePeriod = 0.0
@@ -321,6 +356,11 @@ class ViewController: UIViewController {
     totalPulseCount = 0.0
     totalPulsePeriod = 0.0
     lastProcessedPulseClickTimestamp = 0.0
+  }
+    
+  func pauseDelays(){
+    seqDown()
+    pulseDown(localScale: 1.0)
   }
   
   override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -334,7 +374,7 @@ class ViewController: UIViewController {
     case .upArrow:
       computeDelays()
     case .downArrow:
-      pauseDelays(localScale: 1.0)
+      pauseDelays()
     default:
       super.pressesBegan(presses, with: event)
     }
