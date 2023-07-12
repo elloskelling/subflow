@@ -52,6 +52,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define LAST_MODE MODE_PMP
 #define DELAYS_SIZE 5
 
+#define CMD_COLOR_MIN 0u
+#define CMD_COLOR_MAX 63u
+
+#define DEBOUNCE_COLORSWITCH_T 2.0l
+#define RGB_COLOR_RED 48u
+#define RGB_COLOR_WHT 63u
+
 #define CMD_BPM_MAX 480.0f
 #define CMD_BPM_MIN 20.0f
 
@@ -63,6 +70,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define UDP_MODE "MOD"
 #define UDP_SPEED "SPD"
 #define UDP_SCALE "SCL"
+#define UDP_COL "COL"
 #define UDP_NONE "NON"
 #define MAX_INST_CMD_SEQ 10
 #define MAX_LOOPS 2000000000

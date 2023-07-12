@@ -19,14 +19,14 @@
 # The device that is running the subflow visualization must be on the same network as this sender,
 # and must be reachable via UDP broadcast.
 # Example usage:
-# ./send_cmd.py "subflow24379;BPM:122:0;SCL:1.1:0;MOD:7:7;MOD:4:7;MOD:3:7;SCL:1.0:7;LOP:2:2000;"
-#                  header    |  cmd 1  |  cmd 2  | cmd 3 | cmd 4 | cmd 5 |  cmd 6  |  cmd 7
-#                ---------------------------------------------------------------------------
-#                 keep as is | set BPM |set pulse| MODE 7| MODE 4| MODE 3| turn off| jump to cmd 2
-#                            | to 122  | to 110% | for 7 | for 7 | for 7 | pulsing | and loop
-#                            | forever |  scale  | beats | beats | beats |for 7 bts| 2000 times
-#                                            ^                                          |
-#                                            |___________________jump___________________|
+# ./send_cmd.py "subflow24379;BPM:122:0;SCL:1.1:0;MOD:7:7;MOD:4:7;MOD:3:7;SCL:1.0:7;COL:48:0;LOP:2:2000;"
+#                  header    |  cmd 1  |  cmd 2  | cmd 3 | cmd 4 | cmd 5 |  cmd 6  |  cmd 7 |  cmd 8
+#                --------------------------------------------------------------------------------------
+#                 keep as is | set BPM |set pulse| MODE 7| MODE 4| MODE 3| turn off| change |jump to cmd 2
+#                            | to 122  | to 110% | for 7 | for 7 | for 7 | pulsing |  color |and loop
+#                            | forever |  scale  | beats | beats | beats |for 7 bts| to red |2000 times
+#                                            ^                                                 |
+#                                            |________________________jump_____________________|
 # Command Structure
 # "command : argument : duration (beats)"
 #   string :  double  :      uint32
@@ -36,6 +36,7 @@
 # BPM - set BPM; argument is the BPM, 20.0 <= BPM <= 480.0
 # SPD - set glide speed; argument is the speed, 0.3 <= SPD <= 6.3
 # SCL - set pulse scale (1.0 = no pulsing); argument scales the beat pulses, 0.7 <= SCL <= 1.3
+# COL - set color; uses 64-bit RGB palette with two bits per channel (see https://github.com/subflow-org/subflow-org.github.io/blob/main/palette.py)
 # MOD - set viz mode; argument is cast to an int to become the mode, 0 <= MOD <= 7 
 #	  - duration should be (measure length - 1) to account for the mode transition beat
 # LOP - jump to any valid command; argument is the jmp index (1-based, excluding header)

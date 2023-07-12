@@ -98,16 +98,13 @@ class commandParser {
         let newIdx = Int(subCmdStruct.cmdArg)
         if (newIdx < cmdSize - 1){
           curIdx = newIdx
-//          print("Looping (", loopCounter ,") to ", curIdx)
           return nextSubCmd()
         } else {
-//          print("Invalid Index for Loop")
         }
       }
     }
         
     if (curIdx < cmdSize - 1) {
-//      print("advancing index \(curIdx) -> \(curIdx+1)")
       curIdx += 1
     }
   

@@ -64,6 +64,8 @@ class Node {
   var speed_in:Float = 1.0
   var shade_in:Float = 1.0
   var offcenter_in:Float = 1.0
+  
+  var rgbcol:UInt8 = 255
 
   var playMode: UInt32 = MODE_SPR
   var lastMode: UInt32 = MODE_SPR
@@ -109,7 +111,7 @@ class Node {
     self.device = device
     vertexCount = vertices.count
     let uBufferSize = MemoryLayout<Float>.size * Matrix4.numberOfElements() * (numTris+1)
-      + MemoryLayout<Float>.size * (numTris+3);
+      + MemoryLayout<Float>.size * (numTris+3) + MemoryLayout<UInt8>.size*4;
     uniformBuffer = device.makeBuffer(length: uBufferSize, options: [])!
     
     uBufferPointer = uniformBuffer.contents()
@@ -141,7 +143,9 @@ class Node {
       let commandBuffer = commandQueue.makeCommandBuffer()!
       let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
       //renderEncoder.setCullMode(MTLCullMode.front)
-      renderEncoder.setDepthClipMode(MTLDepthClipMode.clip)
+      #if !targetEnvironment(simulator)
+        renderEncoder.setDepthClipMode(MTLDepthClipMode.clip)
+      #endif
       renderEncoder.setRenderPipelineState(pipelineState)
       renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
       
@@ -204,7 +208,9 @@ class Node {
       memcpy(uBufferPointer + MemoryLayout<Float>.size * Matrix4.numberOfElements()*numTris, projectionMatrix.raw(), MemoryLayout<Float>.size * Matrix4.numberOfElements())
       
       memcpy(uBufferPointer + MemoryLayout<Float>.size * Matrix4.numberOfElements()*(numTris+1), greys, MemoryLayout<Float>.size * greys.count)
-      
+
+      memcpy(uBufferPointer + MemoryLayout<Float>.size * Matrix4.numberOfElements()*(numTris+1) + MemoryLayout<Float>.size * greys.count, &rgbcol, MemoryLayout<UInt8>.size)
+
       renderEncoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
       for ni in 0...(numTris-1){
         renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: (numTris-1-ni)*4, vertexCount: 4, instanceCount: 1)
@@ -223,8 +229,7 @@ class Node {
       if cmdBPM >= CFTimeInterval(CMD_BPM_MIN) && cmdBPM <= CFTimeInterval(CMD_BPM_MAX) {
         remoteBPM = cmdBPM
         pulsePeriod = 60.0/remoteBPM
-        speed_in = Float(TRI_SPACE/pulsePeriod)
- //       print("BPM: ", remoteBPM)
+        speed_in = Float(CFTimeInterval(TRI_SPACE)/pulsePeriod)
       }else{
         pulsePeriod = 0.0
       }
@@ -234,21 +239,23 @@ class Node {
       let cmdSpd = Float(inCmd.cmdArg)
       if cmdSpd >= SPEED_MIN && cmdSpd <= SPEED_MAX {
         speed_in = cmdSpd
- //       print("Speed: ", speed_in)
       }
       curCmdCountdown = inCmd.cmdDuration
     case UDP_SCALE:
       let cmdScl = Float(inCmd.cmdArg)
       if cmdScl >= SCALE_MIN && cmdScl <= SCALE_MAX {
         pulse_scale = cmdScl
-//        print("Scale: ", pulse_scale)
       }
       curCmdCountdown = inCmd.cmdDuration
+    case UDP_COL:
+      let cmdColor = UInt8(inCmd.cmdArg)
+      if cmdColor >= CMD_COLOR_MIN && cmdColor <= CMD_COLOR_MAX {
+        rgbcol = cmdColor
+      }
     case UDP_MODE:
       let cmdMode = UInt32(inCmd.cmdArg)
       if (cmdMode >= FIRST_MODE && cmdMode <= LAST_MODE){
         playMode = cmdMode
-//        print("Mode: ", playMode)
       }
       curCmdCountdown = inCmd.cmdDuration
     default:
@@ -387,7 +394,6 @@ class Node {
   }
   
   func defaultParams(){
-//    speed_in = DEFAULT_SPEED
     pulse_scale = DEFAULT_PULSE_SCALE
     remoteBPM = 0.0
   }

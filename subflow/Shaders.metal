@@ -34,12 +34,15 @@ struct Uniforms{
   float4x4 modelMatrix[NUM_TRIANGLES];
   float4x4 projectionMatrix;
   float greys[NUM_TRIANGLES];
+  unsigned char color;
 };
+
 
 vertex VertexOut basic_vertex(
                               const device VertexIn* vertex_array [[ buffer(0) ]],
                               const device Uniforms&  uniforms    [[ buffer(1) ]],
-                              unsigned int vid [[ vertex_id ]]) {
+                              unsigned int vid [[ vertex_id ]])
+{
   float4x4 mv_Matrix;
   float4x4 proj_Matrix = uniforms.projectionMatrix;
   
@@ -47,14 +50,23 @@ vertex VertexOut basic_vertex(
   mv_Matrix = uniforms.modelMatrix[mid];
   VertexIn VertexIn = vertex_array[vid];
   float grey = uniforms.greys[mid];
-  
+  unsigned char color = uniforms.color;
+
+  unsigned char red = (color >> 4) & 0x03;
+  unsigned char green = (color >> 2) & 0x03;
+  unsigned char blue = color & 0x03;
+
+  float redf = ((float)red)/3.0;
+  float greenf = ((float)green)/3.0;
+  float bluef = ((float)blue)/3.0;
   
   VertexOut VertexOut;
   VertexOut.position = proj_Matrix * mv_Matrix * float4(VertexIn.position,1);
   
-  for (int k = 0; k<3; k++)
-    VertexOut.color[k] = grey;
-  
+  VertexOut.color[0] = grey*redf;
+  VertexOut.color[1] = grey*greenf;
+  VertexOut.color[2] = grey*bluef;
+
   return VertexOut;
 }
 
